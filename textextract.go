@@ -11,13 +11,14 @@ import (
 	"unicode/utf8"
 
 	"golang.org/x/net/html"
+	"golang.org/x/net/html/atom"
 )
 
 func isInAnchor(n *html.Node) bool {
 	if n.Parent == nil {
 		return false
 	}
-	if strings.ToLower(n.Parent.Data) == "a" {
+	if n.Parent.DataAtom == atom.A {
 		return true
 	}
 	return isInAnchor(n.Parent)
@@ -41,14 +42,14 @@ func filter(doc *html.Node, minScore int) *html.Node {
 	f = func(n *html.Node, score int) int {
 		if n.Type == html.TextNode {
 			count := len(strings.Split(normaliseText(n.Data), " "))
-			switch {
-			case strings.ToLower(n.Parent.Data) == "script":
-			case strings.ToLower(n.Parent.Data) == "style":
-			case strings.ToLower(n.Parent.Data) == "link":
-			case isInAnchor(n):
-				score -= 1 + count ^ 2
+			switch n.Parent.DataAtom {
+			case atom.Script, atom.Style, atom.Link: // ignore
 			default:
-				score += count
+				if isInAnchor(n) {
+					score -= 1 + count ^ 2
+				} else {
+					score += count
+				}
 			}
 			return score
 		}
@@ -58,7 +59,7 @@ func filter(doc *html.Node, minScore int) *html.Node {
 			score += f(c, ownScore)
 		}
 
-		if score <= minScore && strings.ToLower(n.Data) != "a" {
+		if score <= minScore && n.DataAtom != atom.A {
 			toDelete = append(toDelete, NodePair{n.Parent, n})
 		}
 		return score
@@ -99,10 +100,10 @@ func ExtractFromHtml(htmlUTF8Str string, minScore int /*5 is default, -1=>no fil
 	f = func(n *html.Node) {
 		d := normaliseText(n.Data)
 		if n.Type == html.TextNode && d != "" && d != " " {
-			switch strings.ToLower(n.Parent.Data) {
-			case "title": // don't pass the title through
+			switch n.Parent.DataAtom {
+			case atom.Title: // don't pass the title through
 				title = d
-			case "le":
+			case atom.Li:
 				if addFullStops && n.Parent.LastChild == n {
 					d = strings.TrimSpace(d)
 					r, _ := utf8.DecodeLastRuneInString(d)
@@ -121,7 +122,7 @@ func ExtractFromHtml(htmlUTF8Str string, minScore int /*5 is default, -1=>no fil
 				}
 				buffer.WriteString(fmt.Sprintf("\n%s", d))
 
-			case "h1", "h2", "h3", "h4", "h5", "h6", "h7", "h8", "p", "th", "td", "figcaption":
+			case atom.H1, atom.H2, atom.H3, atom.H4, atom.H5, atom.H6, atom.P, atom.Th, atom.Td, atom.Figcaption:
 				if addFullStops && n.Parent.FirstChild == n {
 					if buffer.Len() > 0 {
 						r, _ := utf8.DecodeLastRune(buffer.Bytes())
