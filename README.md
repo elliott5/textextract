@@ -1,8 +1,10 @@
 # textextract
 
-textextract is a tiny library (87 lines of Go) that identifies where the article content is in a HTML page (as opposed to navigation, headers, footers, ads, etc), extracts it and returns it as a string.
+textextract is a tiny library (<150 lines of Go) that optionally identifies where the article content is in a HTML page (as opposed to navigation, headers, footers, ads, etc), extracts it and returns it as a string. 
 
 It's a tree search and score algorithm, it uses a very simple scoring rule, it is surprisingly effective.
+
+It also optionally adds full-stops to the end of selected HTML elements, if other punctuation is absent.
 
 ## What it's for
 
@@ -20,20 +22,23 @@ If you're doing semantic analysis on crawled information and you need article co
 
 ## How to install it
 
-    go get https://github.com/emiruz/textextract
+    go get https://github.com/elliott5/textextract
 
 ## How to use it
 
-    import "github.com/emiruz/textextract"
+    import "github.com/elliott5/textextract"
 
-    main func() {
-    	textextract.MinScore = 5 // the default is 5.
-        extractedText, err := textextract.ExtractFromHtml(yourUTF8HTMLString)
+    func Extract(yourUTF8HTMLString string) (string,error) {
+    	minScore := 5 // The suggested default is 5, a -ve value will not filter at all.
+        addFullStops := true // Add full stops based on html structures if other punctuation is absent.
+        return textextract.ExtractFromHtml(yourUTF8HTMLString, minScore, addFullStops)
     }
 
 ## License
 
 MIT Licensed, do as you will with it.
+
+Please acknowledge both this and the upstream version of this repo at: https://github.com/emiruz/textextract
 
 ## Bugs
 
@@ -43,4 +48,6 @@ Please submit them as issues on the repository.
 
 1. Add tests
 
-2. Add comments.
+2. Add comments
+
+3. Add non-english "and/or" rules for the end of list elements
