@@ -24,6 +24,19 @@ func isInAnchor(n *html.Node) bool {
 	return isInAnchor(n.Parent)
 }
 
+func containsAnchorOrIgnore(n *html.Node) bool {
+	switch n.DataAtom {
+	case atom.A, atom.Script, atom.Style, atom.Link:
+		return true
+	}
+	for c := n.FirstChild; c != nil; c = c.NextSibling {
+		if containsAnchorOrIgnore(c) {
+			return true
+		}
+	}
+	return false
+}
+
 func normaliseText(t string) string {
 	r, _ := regexp.Compile("<[^>]*>|\\n|\\t| +")
 	r2, _ := regexp.Compile("^ +| +$")
@@ -59,8 +72,18 @@ func filter(doc *html.Node, minScore int) *html.Node {
 			score += f(c, ownScore)
 		}
 
-		if score <= minScore && n.DataAtom != atom.A {
-			toDelete = append(toDelete, NodePair{n.Parent, n})
+		if score <= minScore {
+			switch n.DataAtom {
+			case atom.A: // do not delete
+			case atom.H1, atom.H2, atom.H3, atom.H4, atom.H5, atom.H6:
+				// do not delete, as headings tend to be short anyway
+				if isInAnchor(n) || containsAnchorOrIgnore(n) {
+					// unless there is anchor involvement
+					toDelete = append(toDelete, NodePair{n.Parent, n})
+				}
+			default:
+				toDelete = append(toDelete, NodePair{n.Parent, n})
+			}
 		}
 		return score
 	}
@@ -103,6 +126,7 @@ func ExtractFromHtml(htmlUTF8Str string, minScore int /*5 is default, -1=>no fil
 			switch n.Parent.DataAtom {
 			case atom.Title: // don't pass the title through
 				title = d
+
 			case atom.Li:
 				if addFullStops && n.Parent.LastChild == n {
 					d = strings.TrimSpace(d)
