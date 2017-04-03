@@ -75,31 +75,33 @@ func filter(doc *html.Node, minScore int) *html.Node {
 
 const fullStop = "." // Maybe use ".!." for testing to show where auto-added.
 
-func ExtractFromHtml(htmlUTF8Str string, minScore int /*5 is default, -1=>no filter*/, addFullStops bool, lang string) (string, error) {
+func ExtractFromHtml(htmlUTF8Str string, minScore int /*5 is default, -1=>no filter*/, addFullStops bool, lang string) (string, string, error) {
 	if len(lang) < 2 {
-		return "", errors.New("language not supported: " + lang)
+		return "", "", errors.New("language not supported: " + lang)
 	}
 	listEndings, langFound := map[string][]string{
 		"en": []string{"&", "and", "/", "or"}, // TODO non-english and/or
 	}[strings.ToLower(lang[:2])]
 	if !langFound {
-		return "", errors.New("language not supported: " + lang)
+		return "", "", errors.New("language not supported: " + lang)
 	}
 
 	doc, err := html.Parse(strings.NewReader(htmlUTF8Str))
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 	if minScore >= 0 {
 		doc = filter(doc, minScore)
 	}
 	var f func(n *html.Node)
 	var buffer bytes.Buffer
+	var title string
 	f = func(n *html.Node) {
 		d := normaliseText(n.Data)
 		if n.Type == html.TextNode && d != "" && d != " " {
 			switch strings.ToLower(n.Parent.Data) {
 			case "title": // don't pass the title through
+				title = d
 			case "le":
 				if addFullStops && n.Parent.LastChild == n {
 					d = strings.TrimSpace(d)
@@ -146,5 +148,5 @@ func ExtractFromHtml(htmlUTF8Str string, minScore int /*5 is default, -1=>no fil
 		}
 	}
 	f(doc)
-	return buffer.String(), nil
+	return title, buffer.String(), nil
 }

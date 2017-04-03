@@ -1,6 +1,6 @@
 # textextract
 
-textextract is a tiny library (<150 lines of Go) that optionally identifies where the article content is in a HTML page (as opposed to navigation, headers, footers, ads, etc), extracts it and returns it as a string. 
+textextract is a tiny library (<200 lines of Go) that optionally identifies where the article content is in a HTML page (as opposed to navigation, headers, footers, ads, etc), extracts it and returns it as a string. 
 
 It's a tree search and score algorithm, it uses a very simple scoring rule, it is surprisingly effective.
 
@@ -28,7 +28,7 @@ If you're doing semantic analysis on crawled information and you need article co
 ```
     import "github.com/elliott5/textextract"
 
-    func Extract(yourUTF8HTMLString string) (string,error) {
+    func Extract(yourUTF8HTMLString string) (title, content string, err error) {
         minScore := 5 // The suggested default is 5, a -ve value will not filter at all.
         addFullStops := true // Add full stops based on html structures if other punctuation is absent.
         lang := "en" // Only English is supported at present.
