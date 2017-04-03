@@ -75,10 +75,20 @@ func filter(doc *html.Node, minScore int) *html.Node {
 
 const fullStop = "." // Maybe use ".!." for testing to show where auto-added.
 
-func ExtractFromHtml(htmlUTF8Str string, minScore int /*5 is default, -1=>no filter*/, addFullStops bool) (string, error) {
+func ExtractFromHtml(htmlUTF8Str string, minScore int /*5 is default, -1=>no filter*/, addFullStops bool, lang string) (string, error) {
+	if len(lang) < 2 {
+		return "", errors.New("language not supported: " + lang)
+	}
+	listEndings, langFound := map[string][]string{
+		"en": []string{"&", "and", "/", "or"}, // TODO non-english and/or
+	}[strings.ToLower(lang[:2])]
+	if !langFound {
+		return "", errors.New("language not supported: " + lang)
+	}
+
 	doc, err := html.Parse(strings.NewReader(htmlUTF8Str))
 	if err != nil {
-		return "", errors.New("Could not parse HTML string.")
+		return "", err
 	}
 	if minScore >= 0 {
 		doc = filter(doc, minScore)
@@ -89,15 +99,18 @@ func ExtractFromHtml(htmlUTF8Str string, minScore int /*5 is default, -1=>no fil
 		d := normaliseText(n.Data)
 		if n.Type == html.TextNode && d != "" && d != " " {
 			switch strings.ToLower(n.Parent.Data) {
-			case "title":
+			case "title": // don't pass the title through
 			case "le":
 				if addFullStops && n.Parent.LastChild == n {
 					d = strings.TrimSpace(d)
 					r, _ := utf8.DecodeLastRuneInString(d)
 					if !unicode.IsPunct(r) {
-						for _, end := range []string{" &", " and", " /", " or"} { // TODO non-english and/or
+						for _, end := range listEndings {
 							if strings.HasSuffix(d, end) {
-								goto noAdd
+								prevRune, _ := utf8.DecodeLastRuneInString(strings.TrimSuffix(d, end))
+								if unicode.IsPunct(prevRune) || unicode.IsSpace(prevRune) {
+									goto noAdd
+								}
 							}
 						}
 						d += fullStop

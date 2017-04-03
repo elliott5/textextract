@@ -25,15 +25,16 @@ If you're doing semantic analysis on crawled information and you need article co
     go get https://github.com/elliott5/textextract
 
 ## How to use it
-
+```
     import "github.com/elliott5/textextract"
 
     func Extract(yourUTF8HTMLString string) (string,error) {
-    	minScore := 5 // The suggested default is 5, a -ve value will not filter at all.
+        minScore := 5 // The suggested default is 5, a -ve value will not filter at all.
         addFullStops := true // Add full stops based on html structures if other punctuation is absent.
-        return textextract.ExtractFromHtml(yourUTF8HTMLString, minScore, addFullStops)
+        lang := "en" // Only English is supported at present.
+        return textextract.ExtractFromHtml(yourUTF8HTMLString, minScore, addFullStops,lang)
     }
-
+```
 ## License
 
 MIT Licensed, do as you will with it.
