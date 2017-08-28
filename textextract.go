@@ -37,9 +37,10 @@ func containsAnchorOrIgnore(n *html.Node) bool {
 	return false
 }
 
+var r = regexp.MustCompile("<[^>]*>|\\n|\\t| +")
+var r2 = regexp.MustCompile("^ +| +$")
+
 func normaliseText(t string) string {
-	r, _ := regexp.Compile("<[^>]*>|\\n|\\t| +")
-	r2, _ := regexp.Compile("^ +| +$")
 	return r2.ReplaceAllString(r.ReplaceAllString(
 		r.ReplaceAllString(t, " "),
 		" "), "")
