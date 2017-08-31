@@ -37,12 +37,12 @@ func containsAnchorOrIgnore(n *html.Node) bool {
 	return false
 }
 
-var r = regexp.MustCompile("<[^>]*>|\\n|\\t| +")
-var r2 = regexp.MustCompile("^ +| +$")
+var rExp = regexp.MustCompile("<[^>]*>|\\n|\\t| +")
+var r2Exp = regexp.MustCompile("^ +| +$")
 
 func normaliseText(t string) string {
-	return r2.ReplaceAllString(r.ReplaceAllString(
-		r.ReplaceAllString(t, " "),
+	return r2Exp.ReplaceAllString(rExp.ReplaceAllString(
+		rExp.ReplaceAllString(t, " "),
 		" "), "")
 }
 
@@ -145,7 +145,7 @@ func ExtractFromHtml(htmlUTF8Str string, minScore int /*5 is default, -1=>no fil
 					noAdd:
 					}
 				}
-				buffer.WriteString(fmt.Sprintf("\n%s", d))
+				buffer.WriteString(fmt.Sprintf("\n\n%s", d))
 
 			case atom.H1, atom.H2, atom.H3, atom.H4, atom.H5, atom.H6, atom.P, atom.Th, atom.Td, atom.Figcaption:
 				if addFullStops && n.Parent.FirstChild == n {
@@ -163,7 +163,7 @@ func ExtractFromHtml(htmlUTF8Str string, minScore int /*5 is default, -1=>no fil
 						d += fullStop
 					}
 				}
-				buffer.WriteString(fmt.Sprintf("\n%s", d))
+				buffer.WriteString(fmt.Sprintf("\n\n%s", d))
 
 			default:
 				buffer.WriteString(fmt.Sprintf("\n%s", d))
