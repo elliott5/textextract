@@ -147,7 +147,7 @@ func ExtractFromHtml(htmlUTF8Str string, minScore int /*5 is default, -1=>no fil
 				}
 				buffer.WriteString(fmt.Sprintf("\n\n%s", d))
 
-			case atom.H1, atom.H2, atom.H3, atom.H4, atom.H5, atom.H6, atom.P, atom.Th, atom.Td, atom.Figcaption:
+			case atom.H1, atom.H2, atom.H3, atom.H4, atom.H5, atom.H6, atom.P, atom.Th, atom.Td, atom.Figcaption, atom.Div:
 				if addFullStops && n.Parent.FirstChild == n {
 					if buffer.Len() > 0 {
 						r, _ := utf8.DecodeLastRune(buffer.Bytes())
@@ -166,7 +166,7 @@ func ExtractFromHtml(htmlUTF8Str string, minScore int /*5 is default, -1=>no fil
 				buffer.WriteString(fmt.Sprintf("\n\n%s", d))
 
 			default:
-				buffer.WriteString(fmt.Sprintf("\n%s", d))
+				buffer.WriteString(fmt.Sprintf(" %s", d))
 			}
 		}
 		for c := n.FirstChild; c != nil; c = c.NextSibling {
