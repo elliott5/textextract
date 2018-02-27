@@ -165,6 +165,9 @@ func ExtractFromHtml(htmlUTF8Str string, minScore int /*5 is default, -1=>no fil
 				}
 				buffer.WriteString(fmt.Sprintf("\n\n%s", d))
 
+			case atom.Script, atom.Style:
+				// do not pass through
+
 			default:
 				buffer.WriteString(fmt.Sprintf(" %s", d))
 			}
